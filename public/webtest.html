@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ทดสอบ API ผู้ใช้</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin-bottom: 20px; }
+        input, button { margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <h1>ทดสอบ API ผู้ใช้</h1>
+
+    <div class="section">
+        <h2>ดูข้อมูลผู้ใช้</h2>
+        <button onclick="getUsers()">ดูข้อมูลผู้ใช้ทั้งหมด</button>
+        <div id="userList"></div>
+    </div>
+
+    <div class="section">
+        <h2>เพิ่มผู้ใช้ใหม่</h2>
+        <input type="text" id="newUsername" placeholder="ชื่อผู้ใช้">
+        <input type="email" id="newEmail" placeholder="อีเมล">
+        <input type="password" id="newPassword" placeholder="รหัสผ่าน">
+        <button onclick="addUser()">เพิ่มผู้ใช้</button>
+    </div>
+
+    <div class="section">
+        <h2>ลบผู้ใช้</h2>
+        <input type="number" id="deleteUserId" placeholder="ID ผู้ใช้">
+        <button onclick="deleteUser()">ลบผู้ใช้</button>
+    </div>
+
+    <div class="section">
+        <h2>อัปเดตผู้ใช้</h2>
+        <input type="number" id="updateUserId" placeholder="ID ผู้ใช้">
+        <input type="text" id="updateUsername" placeholder="ชื่อผู้ใช้ใหม่">
+        <input type="email" id="updateEmail" placeholder="อีเมลใหม่">
+        <input type="password" id="updatePassword" placeholder="รหัสผ่านใหม่">
+        <button onclick="updateUser()">อัปเดตผู้ใช้</button>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+
+        async function getUsers() {
+            try {
+                const response = await fetch(`${API_URL}/users`);
+                const users = await response.json();
+                const userList = document.getElementById('userList');
+                userList.innerHTML = '<h3>รายชื่อผู้ใช้:</h3>' + 
+                    users.map(user => `<p>ID: ${user.id}, ชื่อผู้ใช้: ${user.username}, อีเมล: ${user.email}</p>`).join('');
+            } catch (error) {
+                console.error('เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้:', error);
+                alert('เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้');
+            }
+        }
+
+        async function addUser() {
+            const username = document.getElementById('newUsername').value;
+            const email = document.getElementById('newEmail').value;
+            const password = document.getElementById('newPassword').value;
+
+            try {
+                const response = await fetch(`${API_URL}/users`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    alert('เพิ่มผู้ใช้สำเร็จ');
+                    getUsers();
+                } else {
+                    alert(`เกิดข้อผิดพลาด: ${result.error}`);
+                }
+            } catch (error) {
+                console.error('เกิดข้อผิดพลาดในการเพิ่มผู้ใช้:', error);
+                alert('เกิดข้อผิดพลาดในการเพิ่มผู้ใช้');
+            }
+        }
+
+        async function deleteUser() {
+            const userId = document.getElementById('deleteUserId').value;
+
+            try {
+                const response = await fetch(`${API_URL}/users/${userId}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    alert('ลบผู้ใช้สำเร็จ');
+                    getUsers();
+                } else {
+                    alert(`เกิดข้อผิดพลาด: ${result.error}`);
+                }
+            } catch (error) {
+                console.error('เกิดข้อผิดพลาดในการลบผู้ใช้:', error);
+                alert('เกิดข้อผิดพลาดในการลบผู้ใช้');
+            }
+        }
+
+        async function updateUser() {
+            const userId = document.getElementById('updateUserId').value;
+            const username = document.getElementById('updateUsername').value;
+            const email = document.getElementById('updateEmail').value;
+            const password = document.getElementById('updatePassword').value;
+
+            try {
+                const response = await fetch(`${API_URL}/users/${userId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    alert('อัปเดตผู้ใช้สำเร็จ');
+                    getUsers();
+                } else {
+                    alert(`เกิดข้อผิดพลาด: ${result.error}`);
+                }
+            } catch (error) {
+                console.error('เกิดข้อผิดพลาดในการอัปเดตผู้ใช้:', error);
+                alert('เกิดข้อผิดพลาดในการอัปเดตผู้ใช้');
+            }
+        }
+    </script>
+</body>
+</html>

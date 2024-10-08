@@ -231,3 +231,46 @@ app.use((req, res, next) => {
     return res.status(401).json({ error: 'Token ไม่ถูกต้อง' });
   }
 });
+
+// เพิ่ม endpoint สำหรับเพิ่มผู้ใช้งานเริ่มต้น
+app.post('/add-username', async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+
+    // ตรวจสอบว่ามีข้อมูลครบถ้วนหรือไม่
+    if (!username || !email || !password) {
+      return res.status(400).json({ error: 'กรุณากรอกข้อมูลให้ครบถ้วน' });
+    }
+
+    // ตรวจสอบว่า username หรือ email มีอยู่แล้วหรือไม่
+    const existingUser = await pool.query('SELECT * FROM users WHERE username = $1 OR email = $2', [username, email]);
+    if (existingUser.rows.length > 0) {
+      return res.status(400).json({ error: 'ชื่อผู้ใช้หรืออีเมลนี้ถูกใช้งานแล้ว' });
+    }
+
+    // เข้ารหัสรหัสผ่าน
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // เพิ่มผู้ใช้ใหม่ลงในฐานข้อมูล
+    const result = await pool.query(
+      'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email',
+      [username, email, hashedPassword]
+    );
+
+    res.status(201).json({
+      message: 'เพิ่มผู้ใช้งานสำเร็จ',
+      user: result.rows[0]
+    });
+  } catch (error) {
+    console.error('เกิดข้อผิดพลาดในการเพิ่มผู้ใช้งาน:', error);
+    res.status(500).json({ error: 'เกิดข้อผิดพลาดในการเพิ่มผู้ใช้งาน' });
+  }
+});
+
+// เพิ่มเส้นทางสำหรับไฟล์ static
+app.use(express.static(path.join(__dirname, 'public')));
+
+// เพิ่มเส้นทางสำหรับ /webtest
+app.get('/webtest', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'webtest.html'));
+});
