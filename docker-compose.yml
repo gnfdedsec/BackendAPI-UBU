@@ -1,36 +1,23 @@
-version: '3.8'
-
+version: '3'
 services:
-  postgres:
-    build: .
-    container_name: my-postgres
-    environment:
-      POSTGRES_DB: mydatabase
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: 10102024
-    ports:
-      - "5432:5432"
+  backend:
+    image: node:14
+    user: node
+    working_dir: /home/node/app
     volumes:
-      - postgres-data:/var/lib/postgresql/data
-    networks:
-      - postgres-network
-
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: my-pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@example.com
-      PGADMIN_DEFAULT_PASSWORD: adminpassword
+      - ./:/home/node/app
     ports:
-      - "8080:80"
-    depends_on:
-      - postgres
-    networks:
-      - postgres-network
-
-networks:
-  postgres-network:
-    driver: bridge
-
-volumes:
-  postgres-data:
+      - "${PORT}:${PORT}"
+    command: >
+      sh -c "
+        npm install &&
+        node server-normal.js
+      "
+    environment:
+      - PORT=${PORT}
+      - DB_HOST=host.docker.internal
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
